@@ -1,52 +1,68 @@
 import os
+from glob import glob
+
 import numpy as np
 import tensorflow as tf
-from time import gmtime, strftime
 
 from model import DCGAN
-from utils import pp, save_images, to_json
+from utils import get_image, save_images
 
-flags = tf.app.flags
-flags.DEFINE_integer("epoch", 25, "Epoch to train [25]")
-flags.DEFINE_float("learning_rate", 0.0002, "Learning rate of for adam [0.0002]")
-flags.DEFINE_float("beta1", 0.5, "Momentum term of adam [0.5]")
-flags.DEFINE_integer("train_size", np.inf, "The size of train images [np.inf]")
-flags.DEFINE_integer("batch_size", 64, "The size of batch images [64]")
-flags.DEFINE_integer("image_size", 108, "The size of image to use (will be center cropped) [108]")
-flags.DEFINE_string("dataset", "celebA", "The name of dataset [celebA, mnist, lsun]")
-flags.DEFINE_string("checkpoint_dir", "checkpoint", "Directory name to save the checkpoints [checkpoint]")
-flags.DEFINE_string("sample_dir", "samples", "Directory name to save the image samples [samples]")
-flags.DEFINE_boolean("is_train", False, "True for training, False for testing [False]")
-flags.DEFINE_boolean("is_crop", False, "True for training, False for testing [False]")
-FLAGS = flags.FLAGS
-
-def main(_):
-    pp.pprint(flags.FLAGS.__flags)
-
-    if not os.path.exists(FLAGS.checkpoint_dir):
-        os.makedirs(FLAGS.checkpoint_dir)
-    if not os.path.exists(FLAGS.sample_dir):
-        os.makedirs(FLAGS.sample_dir)
-
+def main():
     with tf.Session() as sess:
-        if FLAGS.dataset == 'mnist':
-            dcgan = DCGAN(sess, image_size=FLAGS.image_size, batch_size=FLAGS.batch_size, y_dim=10,
-                    dataset_name=FLAGS.dataset, is_crop=FLAGS.is_crop, checkpoint_dir=FLAGS.checkpoint_dir)
-        else:
-            dcgan = DCGAN(sess, image_size=FLAGS.image_size, batch_size=FLAGS.batch_size,
-                    dataset_name=FLAGS.dataset, is_crop=FLAGS.is_crop, checkpoint_dir=FLAGS.checkpoint_dir)
+        num_epoch = 25
 
-        if FLAGS.is_train:
-            dcgan.train(FLAGS)
-        else:
-            dcgan.load(FLAGS.checkpoint_dir)
+        train_size = np.inf
+        batch_size = 64
+        image_size = 64
 
-        to_json("./web/js/gen_layers.js", dcgan.h0_w, dcgan.h1_w, dcgan.h2_w, dcgan.h3_w, dcgan.h4_w)
+        checkpoint_interval = 1
 
-        z_sample = np.random.uniform(-1, 1, size=(FLAGS.batch_size, dcgan.z_dim))
+        model = DCGAN(sess, batch_size=batch_size)
+        data = glob(os.path.join("./data", "celebA", "*.jpg"))
 
-        samples = sess.run(dcgan.sampler, feed_dict={dcgan.z: z_sample})
-        save_images(samples, [8, 8], './samples/test_%s.png' % strftime("%Y-%m-%d %H:%M:%S", gmtime()))
+        sess.run(tf.initialize_all_variables())
+
+        sample_z = np.random.uniform(-1.0, 1.0, size=(model.sample_size , model.z_dim))
+        sample_files = data[0:model.sample_size]
+
+        sample = [get_image(sample_file, image_size, is_crop=True) for sample_file in sample_files]
+        sample_images = np.array(sample).astype(np.float32)
+
+        for epoch in range(num_epoch):
+            data = glob(os.path.join("./data", 'celebA', "*.jpg"))
+            batch_idxs = min(len(data), train_size) / batch_size
+
+            for idx in range(0, batch_idxs):
+                batch_files = data[idx*batch_size:(idx+1)*batch_size]
+                batch = [get_image(batch_file, image_size, is_crop=True) for batch_file in batch_files]
+                batch_images = np.array(batch).astype(np.float32)
+
+                batch_z = np.random.uniform(-1.0, 1.0, [batch_size, model.z_dim]).astype(np.float32)
+
+                # update d network
+                sess.run(model.d_optim, feed_dict={
+                    model.images: batch_images,
+                    model.z: batch_z
+                })
+
+                # update g network
+                sess.run(model.g_optim, feed_dict={
+                    model.z: batch_z
+                })
+
+                # run g_optim twice to make sure that d_loss does not go to zero (different from paper)
+                sess.run(model.g_optim, feed_dict={
+                    model.z: batch_z
+                })
+
+                batch_z = np.random.uniform(-1.0, 1.0, [batch_size, model.z_dim]).astype(np.float32)
+                samples, d_loss, g_loss = sess.run([model.sampler, model.d_loss, model.g_loss], feed_dict={
+                    model.z: sample_z,
+                    model.images: sample_images
+                })
+
+                save_images(samples, [8, 8], './samples/train_{0}_{1}.png'.format(epoch, idx))
+                print('loss: {0} (D) {1} (G)'.format(d_loss, g_loss))
 
 if __name__ == '__main__':
-    tf.app.run()
+    main()
