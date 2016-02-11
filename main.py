@@ -1,4 +1,5 @@
 import os
+import time
 from glob import glob
 
 import numpy as np
@@ -10,45 +11,61 @@ from dataset import Dataset, DataIterator
 
 def main():
     with tf.Session() as sess:
-        num_epoch = 2000
+        num_epoch = 5
+        checkpoint_interval = 10
 
-        train_size = np.inf
         batch_size = 64
         image_size = 32
-
-        checkpoint_interval = 20
 
         model = DCGAN(sess, batch_size=batch_size)
 
         dataset = Dataset("cifar10/")
         dataset_iter = DataIterator(dataset.train_images, dataset.train_labels, batch_size)
 
+        summary_writer = tf.train.SummaryWriter('logs_{0}/'.format(int(time.time())), sess.graph_def)
+
         sess.run(tf.initialize_all_variables())
 
-        sample_images = dataset.valid_images[:model.sample_size]
+        sample_images = dataset.valid_images[:model.sample_size].astype(np.float32) / 255.0
         sample_z = np.random.uniform(-1.0, 1.0, size=(model.sample_size , model.z_dim))
 
+        d_overpowered = False
+
+        step = 0
         for epoch in range(num_epoch):
-            if epoch % checkpoint_interval == 0:
-                samples, d_loss, g_loss = sess.run([model.sampler, model.d_loss, model.g_loss], feed_dict={
-                    model.z: sample_z,
-                    model.images: sample_images
-                })
+            for batch_images, _ in dataset_iter.iterate():
+                batch_images = batch_images.astype(np.float32) / 255.0
+                batch_z = np.random.uniform(-1.0, 1.0, [batch_size, model.z_dim]).astype(np.float32)
 
-                save_images(samples, [8, 8], './samples/train_{0}.png'.format(epoch))
-                print('loss: {0} (D) {1} (G)'.format(d_loss, g_loss))
+                # update d network
+                if not d_overpowered:
+                    sess.run(model.d_optim, feed_dict={ model.images: batch_images, model.z: batch_z })
 
-            batch_images, _ = dataset_iter.next_batch()
-            batch_z = np.random.uniform(-1.0, 1.0, [batch_size, model.z_dim]).astype(np.float32)
+                # update g network
+                sess.run(model.g_optim, feed_dict={ model.z: batch_z })
 
-            # update d network
-            sess.run(model.d_optim, feed_dict={ model.images: batch_images, model.z: batch_z })
+                if step % checkpoint_interval == 0:
+                    d_loss, g_loss, summary = sess.run([
+                        model.d_loss,
+                        model.g_loss,
+                        model.merged
+                    ], feed_dict={
+                        model.z: sample_z,
+                        model.images: sample_images
+                    })
 
-            # update g network
-            sess.run(model.g_optim, feed_dict={ model.z: batch_z })
+                    d_overpowered = d_loss < g_loss / 2
 
-            # # run g_optim twice to make sure that d_loss does not go to zero (different from paper)
-            # sess.run(model.g_optim, feed_dict={ model.z: batch_z })
+                    samples = sess.run(model.G, feed_dict={
+                        model.z: sample_z,
+                        model.images: sample_images
+                    })
+
+                    summary_writer.add_summary(summary, step)
+                    save_images(samples, [8, 8], './samples/train_{0}_{1}.png'.format(epoch, step))
+                    print('[{0}, {1}] loss: {2} (D) {3} (G) (d overpowered?: {4})'.format(epoch, step, d_loss, g_loss, d_overpowered))
+
+                step += 1
 
 if __name__ == '__main__':
     main()

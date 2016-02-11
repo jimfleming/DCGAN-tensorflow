@@ -19,16 +19,12 @@ class BatchNorm(object):
         shape = x.get_shape().as_list()
 
         with tf.variable_scope(self.name) as scope:
-            self.gamma = tf.get_variable("gamma", [shape[-1]],
-                                initializer=tf.random_normal_initializer(1., 0.02))
-            self.beta = tf.get_variable("beta", [shape[-1]],
-                                initializer=tf.constant_initializer(0.))
+            self.gamma = tf.get_variable("gamma", [shape[-1]], initializer=tf.random_normal_initializer(1., 0.02))
+            self.beta = tf.get_variable("beta", [shape[-1]], initializer=tf.constant_initializer(0.))
 
             mean, variance = tf.nn.moments(x, [0, 1, 2])
 
-            return tf.nn.batch_norm_with_global_normalization(
-                x, mean, variance, self.beta, self.gamma, self.epsilon,
-                scale_after_normalization=True)
+            return tf.nn.batch_norm_with_global_normalization(x, mean, variance, self.beta, self.gamma, self.epsilon, scale_after_normalization=True)
 
 def binary_cross_entropy_with_logits(logits, targets, name=None):
     """Computes binary cross entropy given `logits`.
@@ -45,8 +41,7 @@ def binary_cross_entropy_with_logits(logits, targets, name=None):
     with ops.op_scope([logits, targets], name, "bce_loss") as name:
         logits = ops.convert_to_tensor(logits, name="logits")
         targets = ops.convert_to_tensor(targets, name="targets")
-        return tf.reduce_mean(-(logits * tf.log(targets + eps) +
-                              (1. - logits) * tf.log(1. - targets + eps)))
+        return tf.reduce_mean(-(logits * tf.log(targets + eps) + (1. - logits) * tf.log(1. - targets + eps)))
 
 def conv_cond_concat(x, y):
     """Concatenate conditioning vector on feature map axis."""
@@ -54,9 +49,7 @@ def conv_cond_concat(x, y):
     y_shapes = y.get_shape()
     return tf.concat(3, [x, y*tf.ones([x_shapes[0], x_shapes[1], x_shapes[2], y_shapes[3]])])
 
-def conv2d(input_, output_dim,
-           k_h=3, k_w=3, d_h=2, d_w=2, stddev=0.02,
-           name="conv2d"):
+def conv2d(input_, output_dim, k_h=3, k_w=3, d_h=2, d_w=2, stddev=0.02, name="conv2d"):
     with tf.variable_scope(name):
         w = tf.get_variable('w', [k_h, k_w, input_.get_shape()[-1], output_dim],
                             initializer=tf.truncated_normal_initializer(stddev=stddev))
@@ -68,18 +61,12 @@ def conv2d(input_, output_dim,
 
         return conv
 
-def deconv2d(input_, output_shape,
-             k_h=3, k_w=3, d_h=2, d_w=2, stddev=0.02,
-             name="deconv2d", with_w=False):
+def deconv2d(input_, output_shape, k_h=3, k_w=3, d_h=2, d_w=2, stddev=0.02, name="deconv2d", with_w=False):
     with tf.variable_scope(name):
         # filter : [height, width, output_channels, in_channels]
-        w = tf.get_variable('w', [k_h, k_h, output_shape[-1], input_.get_shape()[-1]],
-                            initializer=tf.random_normal_initializer(stddev=stddev))
-        deconv = tf.nn.conv2d_transpose(input_, w, output_shape=output_shape,
-                                strides=[1, d_h, d_w, 1])
-
-        biases = tf.Variable(tf.constant(0.0, shape=[output_shape[-1]], dtype=tf.float32),
-                             trainable=True, name='biases')
+        w = tf.get_variable('w', [k_h, k_h, output_shape[-1], input_.get_shape()[-1]], initializer=tf.random_normal_initializer(stddev=stddev))
+        deconv = tf.nn.conv2d_transpose(input_, w, output_shape=output_shape, strides=[1, d_h, d_w, 1])
+        biases = tf.Variable(tf.constant(0.0, shape=[output_shape[-1]], dtype=tf.float32), trainable=True, name='biases')
         bias = tf.reshape(tf.nn.bias_add(deconv, biases), deconv.get_shape())
 
         if with_w:
@@ -97,11 +84,8 @@ def linear(input_, output_size, scope=None, stddev=0.02, bias_start=0.0, with_w=
     shape = input_.get_shape().as_list()
 
     with tf.variable_scope(scope or "Linear"):
-        matrix = tf.get_variable("Matrix", [shape[1], output_size], tf.float32,
-                                 tf.random_normal_initializer(stddev=stddev))
-        bias_term = tf.get_variable(
-            "Bias", [output_size],
-            initializer=tf.constant_initializer(bias_start))
+        matrix = tf.get_variable("Matrix", [shape[1], output_size], tf.float32, tf.random_normal_initializer(stddev=stddev))
+        bias_term = tf.get_variable("Bias", [output_size], initializer=tf.constant_initializer(bias_start))
         if with_w:
             return tf.matmul(input_, matrix) + bias_term, matrix
         else:
