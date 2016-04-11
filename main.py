@@ -1,13 +1,14 @@
-import os
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
+
 import time
-from glob import glob
-
-import numpy as np
 import tensorflow as tf
+import numpy as np
 
-from model import DCGAN
-from utils import get_image, save_images
 from dataset import Dataset, DataIterator
+from model import DCGAN
+from utils import save_images
 
 def main():
     with tf.Session() as sess:
@@ -39,7 +40,7 @@ def main():
 
                 # update d network
                 if not d_overpowered:
-                    sess.run(model.d_optim, feed_dict={ model.images: batch_images, model.z: batch_z })
+                    sess.run(model.d_optim, feed_dict={ model.x: batch_images, model.z: batch_z })
 
                 # update g network
                 sess.run(model.g_optim, feed_dict={ model.z: batch_z })
@@ -50,15 +51,15 @@ def main():
                         model.g_loss,
                         model.merged
                     ], feed_dict={
-                        model.z: sample_z,
-                        model.images: sample_images
+                        model.x: sample_images,
+                        model.z: sample_z
                     })
 
                     d_overpowered = d_loss < g_loss / 2
 
                     samples = sess.run(model.G, feed_dict={
-                        model.z: sample_z,
-                        model.images: sample_images
+                        model.x: sample_images,
+                        model.z: sample_z
                     })
 
                     summary_writer.add_summary(summary, step)
