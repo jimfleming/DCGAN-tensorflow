@@ -14,7 +14,7 @@ from model import DCGAN
 from dataset import DataIterator
 
 def main():
-    batch_size = 64
+    batch_size = 128
 
     with open('dataset/data_10_tf.pkl', 'rb') as f:
         X_train_raw, y_train_raw, X_test, X_test_ids, driver_ids = pickle.load(f)
