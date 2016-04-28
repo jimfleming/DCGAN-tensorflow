@@ -7,7 +7,7 @@ class DCGAN(object):
         self.sess = sess
         self.batch_size = batch_size
         self.sample_size = 64
-        self.image_shape = [32, 32, 3]
+        self.image_shape = [48, 64, 3]
 
         self.z_dim = 100
 
@@ -73,16 +73,19 @@ class DCGAN(object):
             tf.get_variable_scope().reuse_variables()
 
         # project `z` and reshape
-        h0 = tf.reshape(linear(z, self.gf_dim * 8 * 4 * 4, 'g_h0_lin'), [-1, 4, 4, self.gf_dim * 8])
+        h0 = tf.reshape(linear(z, self.gf_dim * 8 * 3 * 4, 'g_h0_lin'), [-1, 3, 4, self.gf_dim * 8])
         h0 = tf.nn.relu(self.g_bn0(h0))
 
-        h1 = deconv2d(h0, [self.batch_size, 8, 8, self.gf_dim * 4], name='g_h1')
+        h1 = deconv2d(h0, [self.batch_size, 6, 8, self.gf_dim * 4], name='g_h1')
         h1 = tf.nn.relu(self.g_bn1(h1))
 
-        h2 = deconv2d(h1, [self.batch_size, 16, 16, self.gf_dim * 2], name='g_h2')
+        h2 = deconv2d(h1, [self.batch_size, 12, 16, self.gf_dim * 2], name='g_h2')
         h2 = tf.nn.relu(self.g_bn2(h2))
 
-        h3 = deconv2d(h2, [self.batch_size, 32, 32, 3], name='g_h3')
-        h3 = tf.nn.tanh(h3)
+        h3 = deconv2d(h2, [self.batch_size, 24, 32, self.gf_dim * 1], name='g_h3')
+        h3 = tf.nn.relu(self.g_bn3(h3))
 
-        return h3
+        h4 = deconv2d(h3, [self.batch_size, 48, 64, 3], name='g_h4')
+        h4 = tf.nn.tanh(h4)
+
+        return h4

@@ -3,39 +3,58 @@ from __future__ import print_function
 from __future__ import division
 
 import time
-import tensorflow as tf
+import pickle
 import numpy as np
+import tensorflow as tf
 
-from dataset import Dataset, DataIterator
+from dataset import DataIterator
 from model import DCGAN
 from utils import save_images
 
+from sklearn.cross_validation import train_test_split
+
 def main():
+    batch_size = 64
+
+    with open('dataset/data_10_tf.pkl', 'rb') as f:
+        X_train_raw, y_train_raw, X_test, X_test_ids, driver_ids = pickle.load(f)
+
+    X_train_raw = X_train_raw.astype(np.float32)
+    X_test = X_test.astype(np.float32)
+
+    mean_train = X_train_raw.mean()
+    std_train = X_train_raw.std()
+
+    mean_test = X_test.mean()
+    std_test = X_test.std()
+
+    X_train_raw = X_train_raw - mean_train
+    X_train_raw = X_train_raw / std_train
+
+    X_test = X_test - mean_test
+    X_test = X_test / std_test
+
     with tf.Session() as sess:
-        num_epoch = 5
+        num_epoch = 20
         checkpoint_interval = 10
 
-        batch_size = 64
-        image_size = 32
-
         model = DCGAN(sess, batch_size=batch_size)
-
-        dataset = Dataset("cifar10/")
-        dataset_iter = DataIterator(dataset.train_images, dataset.train_labels, batch_size)
-
         summary_writer = tf.train.SummaryWriter('logs_{0}/'.format(int(time.time())), sess.graph_def)
-
         sess.run(tf.initialize_all_variables())
 
-        sample_images = dataset.valid_images[:model.sample_size].astype(np.float32) / 255.0
-        sample_z = np.random.uniform(-1.0, 1.0, size=(model.sample_size , model.z_dim))
+        X_train, X_valid, y_train, y_valid = train_test_split(X_train_raw, y_train_raw, \
+            test_size=model.sample_size, random_state=41)
+
+        dataset_iter = DataIterator(X_train, y_train, batch_size)
+
+        sample_images = X_valid
+        sample_z = np.random.uniform(-1.0, 1.0, size=(model.sample_size, model.z_dim))
 
         d_overpowered = False
 
         step = 0
         for epoch in range(num_epoch):
             for batch_images, _ in dataset_iter.iterate():
-                batch_images = batch_images.astype(np.float32) / 255.0
                 batch_z = np.random.uniform(-1.0, 1.0, [batch_size, model.z_dim]).astype(np.float32)
 
                 # update d network
