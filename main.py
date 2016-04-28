@@ -17,25 +17,17 @@ def main():
     batch_size = 128
 
     with open('dataset/data_10_tf.pkl', 'rb') as f:
-        X_train_raw, y_train_raw, X_test, X_test_ids, driver_ids = pickle.load(f)
+        X_train_raw, y_train_raw, _, _, _ = pickle.load(f)
 
     X_train_raw = X_train_raw.astype(np.float32)
-    X_test = X_test.astype(np.float32)
 
     mean_train = X_train_raw.mean()
     std_train = X_train_raw.std()
 
-    mean_test = X_test.mean()
-    std_test = X_test.std()
-
     X_train_raw = X_train_raw - mean_train
     X_train_raw = X_train_raw / std_train
 
-    X_test = X_test - mean_test
-    X_test = X_test / std_test
-
     print('train', 'mean', X_train_raw.mean(), 'std', X_train_raw.std())
-    print('test', 'mean', X_test.mean(), 'std', X_test.std())
 
     with tf.Session() as sess:
         num_epoch = 20
@@ -51,7 +43,7 @@ def main():
         dataset_iter = DataIterator(X_train, y_train, batch_size)
 
         sample_images = X_valid
-        sample_z = np.random.uniform(-1.0, 1.0, size=(model.sample_size, model.z_dim))
+        sample_z = np.random.uniform(-1.0, 1.0, size=(model.sample_size, model.z_dim)).astype(np.float32)
 
         d_overpowered = False
 
