@@ -34,6 +34,9 @@ def main():
     X_test = X_test - mean_test
     X_test = X_test / std_test
 
+    print('train', 'mean', X_train_raw.mean(), 'std', X_train_raw.std())
+    print('test', 'mean', X_test.mean(), 'std', X_test.std())
+
     with tf.Session() as sess:
         num_epoch = 20
         checkpoint_interval = 10
@@ -73,6 +76,7 @@ def main():
                         model.x: sample_images,
                         model.z: sample_z
                     })
+                    summary_writer.add_summary(summary, step)
 
                     d_overpowered = d_loss < g_loss / 2
 
@@ -81,8 +85,11 @@ def main():
                         model.z: sample_z
                     })
 
-                    summary_writer.add_summary(summary, step)
-                    save_images(samples, [8, 8], './samples/train_{0}_{1}.png'.format(epoch, step))
+                    samples *= std_train
+                    samples += mean_train
+
+                    samples_path = './samples/train_{0}_{1}.png'.format(epoch, step)
+                    imsave(samples, [8, 8], samples_path)
                     print('[{0}, {1}] loss: {2} (D) {3} (G) (d overpowered?: {4})'.format(epoch, step, d_loss, g_loss, d_overpowered))
 
                 step += 1
