@@ -7,11 +7,11 @@ import pickle
 import numpy as np
 import tensorflow as tf
 
-from dataset import DataIterator
-from model import DCGAN
-from utils import save_images
-
 from sklearn.cross_validation import train_test_split
+
+from utils import imsave
+from model import DCGAN
+from dataset import DataIterator
 
 def main():
     batch_size = 64
@@ -78,7 +78,7 @@ def main():
                     })
                     summary_writer.add_summary(summary, step)
 
-                    d_overpowered = d_loss < g_loss / 2
+                    d_overpowered = d_loss < g_loss
 
                     samples = sess.run(model.G, feed_dict={
                         model.x: sample_images,
