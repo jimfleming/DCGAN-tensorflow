@@ -6,7 +6,7 @@ class DCGAN(object):
     def __init__(self, sess, batch_size):
         self.sess = sess
         self.batch_size = batch_size
-        self.sample_size = 64
+        self.sample_size = 128
         self.image_shape = [48, 64, 3]
 
         self.z_dim = 100

@@ -14,7 +14,7 @@ from model import DCGAN
 from dataset import DataIterator
 
 def main():
-    batch_size = 64
+    batch_size = 128
 
     with open('dataset/data_10_tf.pkl', 'rb') as f:
         X_train_raw, y_train_raw, _, _, _ = pickle.load(f)
@@ -70,7 +70,10 @@ def main():
                     })
                     summary_writer.add_summary(summary, step)
 
-                    d_overpowered = d_loss < g_loss
+                    if epoch == 0:
+                        d_overpowered = d_loss < g_loss / 2
+                    else:
+                        d_overpowered = d_loss < g_loss
 
                     samples = sess.run(model.G, feed_dict={
                         model.x: sample_images,
@@ -81,7 +84,7 @@ def main():
                     samples += mean_train
 
                     samples_path = './samples/train_{0}_{1}.png'.format(epoch, step)
-                    save_images(samples, [8, 8], samples_path)
+                    save_images(samples, [16, 8], samples_path)
                     print('[{0}, {1}] loss: {2} (D) {3} (G) (d overpowered?: {4})'.format(epoch, step, d_loss, g_loss, d_overpowered))
 
                 step += 1
