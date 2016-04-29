@@ -9,7 +9,7 @@ import tensorflow as tf
 
 from sklearn.cross_validation import train_test_split
 
-from utils import imsave
+from utils import save_images
 from model import DCGAN
 from dataset import DataIterator
 
@@ -81,7 +81,7 @@ def main():
                     samples += mean_train
 
                     samples_path = './samples/train_{0}_{1}.png'.format(epoch, step)
-                    imsave(samples, [8, 8], samples_path)
+                    save_images(samples, [16, 8], samples_path)
                     print('[{0}, {1}] loss: {2} (D) {3} (G) (d overpowered?: {4})'.format(epoch, step, d_loss, g_loss, d_overpowered))
 
                 step += 1

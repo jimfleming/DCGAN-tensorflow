@@ -1,8 +1,8 @@
 import numpy as np
 
-from scipy.misc import imsave
+import scipy.misc
 
-def imsave(images, size, path):
+def save_images(images, size, path):
     h, w = images.shape[1], images.shape[2]
     img = np.zeros((h * size[0], w * size[1], 3))
 
@@ -10,4 +10,4 @@ def imsave(images, size, path):
         i = idx % size[1]
         j = idx / size[1]
         img[j*h:j*h+h, i*w:i*w+w, :] = image
-    return imsave(path, img)
+    return scipy.misc.imsave(path, img)
