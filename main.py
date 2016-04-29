@@ -115,8 +115,8 @@ def main():
                     samples_path = os.path.join(SAMPLES_PATH, 'train_{}_{}.png'.format(epoch, step))
                     save_images(samples, [16, 8], samples_path)
 
-                    print('[{}, {}] loss: {} (D) {} (G) (d overpowered?: {})' \
-                        .format(epoch, step, d_loss, g_loss, d_overpowered))
+                    print('[{}, {}] D: optimize: {}, loss: {} G: optimize: {}, loss: {}' \
+                        .format(epoch, step, optimize_d, d_loss, optimize_g, g_loss))
 
                 step += 1
 
