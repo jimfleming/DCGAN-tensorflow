@@ -38,13 +38,7 @@ def main():
 
     X_train_raw = X_train_raw.astype(np.float32)
 
-    mean_train = X_train_raw.mean()
-    std_train = X_train_raw.std()
-
-    X_train_raw = X_train_raw - mean_train
-    X_train_raw = X_train_raw / std_train
-
-    print('train', 'mean', X_train_raw.mean(), 'std', X_train_raw.std())
+    X_train_raw = X_train_raw / 255.0
 
     with tf.Session() as sess:
         num_epoch = 5
@@ -109,8 +103,7 @@ def main():
                         model.z: sample_z
                     })
 
-                    samples *= std_train
-                    samples += mean_train
+                    samples = (samples * 2.0) - 1.0
 
                     samples_path = os.path.join(SAMPLES_PATH, 'train_{}_{}.png'.format(epoch, step))
                     save_images(samples, [8, 8], samples_path)
