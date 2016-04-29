@@ -27,6 +27,9 @@ mkdirp(CHECKPOINT_PATH)
 mkdirp(SUMMARY_PATH)
 mkdirp(MODEL_PATH)
 
+SAMPLES_PATH = os.path.join(SUMMARY_PATH, 'samples')
+mkdirp(SAMPLES_PATH)
+
 def main():
     batch_size = 128
 
@@ -109,9 +112,11 @@ def main():
                     samples *= std_train
                     samples += mean_train
 
-                    samples_path = './samples/train_{0}_{1}.png'.format(epoch, step)
+                    samples_path = os.path.join(SAMPLES_PATH, 'train_{}_{}.png'.format(epoch, step))
                     save_images(samples, [16, 8], samples_path)
-                    print('[{0}, {1}] loss: {2} (D) {3} (G) (d overpowered?: {4})'.format(epoch, step, d_loss, g_loss, d_overpowered))
+
+                    print('[{}, {}] loss: {} (D) {} (G) (d overpowered?: {})' \
+                        .format(epoch, step, d_loss, g_loss, d_overpowered))
 
                 step += 1
 
