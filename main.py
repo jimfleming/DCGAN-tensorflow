@@ -31,7 +31,7 @@ SAMPLES_PATH = os.path.join(SUMMARY_PATH, 'samples')
 mkdirp(SAMPLES_PATH)
 
 def main():
-    batch_size = 128
+    batch_size = sample_size = 64
 
     with open(DATASET_PATH, 'rb') as f:
         X_train_raw, y_train_raw, _, _, _ = pickle.load(f)
@@ -64,12 +64,12 @@ def main():
         tf.train.write_graph(sess.graph_def, MODEL_PATH, 'model.pbtxt')
 
         X_train, X_valid, y_train, y_valid = train_test_split(X_train_raw, y_train_raw, \
-            test_size=model.sample_size, random_state=41)
+            test_size=sample_size, random_state=41)
 
         dataset_iter = DataIterator(X_train, y_train, batch_size)
 
         sample_images = X_valid
-        sample_z = np.random.uniform(-1.0, 1.0, size=(model.sample_size, model.z_dim))
+        sample_z = np.random.uniform(-1.0, 1.0, size=(sample_size, model.z_dim))
 
         d_overpowered = False
 
@@ -113,7 +113,7 @@ def main():
                     samples += mean_train
 
                     samples_path = os.path.join(SAMPLES_PATH, 'train_{}_{}.png'.format(epoch, step))
-                    save_images(samples, [16, 8], samples_path)
+                    save_images(samples, [8, 8], samples_path)
 
                     print('[{}, {}] loss: {} (D) {} (G) (d overpowered?: {})' \
                         .format(epoch, step, d_loss, g_loss, d_overpowered))
