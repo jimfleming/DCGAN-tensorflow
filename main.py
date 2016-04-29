@@ -37,12 +37,7 @@ def main():
         X_train_raw, y_train_raw, _, _, _ = pickle.load(f)
 
     X_train_raw = X_train_raw.astype(np.float32)
-
-    mean_train = X_train_raw.mean()
-    std_train = X_train_raw.std()
-
-    X_train_raw = X_train_raw - mean_train
-    X_train_raw = X_train_raw / std_train
+    X_train_raw = X_train_raw / 255.
 
     print('train', 'mean', X_train_raw.mean(), 'std', X_train_raw.std())
 
@@ -109,8 +104,7 @@ def main():
                         model.z: sample_z
                     })
 
-                    samples *= std_train
-                    samples += mean_train
+                    samples = (samples + 1.) / 2.
 
                     samples_path = os.path.join(SAMPLES_PATH, 'train_{}_{}.png'.format(epoch, step))
                     save_images(samples, [8, 8], samples_path)
