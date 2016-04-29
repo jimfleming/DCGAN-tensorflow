@@ -1,0 +1,7 @@
+name = "dcgan-drivers"
+repo = "https://github.com/jimfleming/DCGAN-tensorflow.git"
+description = "DCGAN-tensorflow => distracted-drivers"
+environment = "tensorflow"
+
+[datasets]
+"jim/distracted-drivers" = "0.0.5"
