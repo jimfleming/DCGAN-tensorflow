@@ -66,19 +66,20 @@ def main():
         sample_images = X_valid
         sample_z = np.random.uniform(-1.0, 1.0, size=(sample_size, model.z_dim))
 
-        d_overpowered = False
+        margin = 0.3
+        optimize_d = False
+        optimize_g = False
 
         step = 0
         for epoch in range(num_epoch):
             for batch_images, _ in dataset_iter.iterate():
                 batch_z = np.random.uniform(-1.0, 1.0, [batch_size, model.z_dim])
 
-                # update d network
-                if not d_overpowered:
+                if optimize_d:
                     sess.run(model.d_optim, feed_dict={ model.x: batch_images, model.z: batch_z })
 
-                # update g network
-                sess.run(model.g_optim, feed_dict={ model.z: batch_z })
+                if optimize_g:
+                    sess.run(model.g_optim, feed_dict={ model.z: batch_z })
 
                 if step % checkpoint_interval == 0:
                     d_loss, g_loss, summary = sess.run([
@@ -94,10 +95,15 @@ def main():
                     checkpoint_path = os.path.join(CHECKPOINT_PATH, 'model')
                     saver.save(sess, checkpoint_path, global_step=step)
 
-                    if epoch == 0:
-                        d_overpowered = d_loss < g_loss / 2
-                    else:
-                        d_overpowered = d_loss < g_loss
+                    if d_loss < margin:
+                         optimize_d = False
+
+                    if g_loss < margin:
+                        optimize_g = False
+
+                    if optimize_d is False and optimize_g is False:
+                        optimize_d = True
+                        optimize_g = True
 
                     samples = sess.run(model.G, feed_dict={
                         model.x: sample_images,
