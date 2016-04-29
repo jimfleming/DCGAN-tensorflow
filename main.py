@@ -53,10 +53,10 @@ def main():
         summary_path = os.path.join(SUMMARY_PATH, 'summary_{}'.format(now))
         mkdirp(summary_path)
 
-        summary_writer = tf.train.SummaryWriter(summary_path, sess.graph_def)
+        summary_writer = tf.train.SummaryWriter(summary_path, sess.graph)
         sess.run(tf.initialize_all_variables())
 
-        tf.train.write_graph(sess.graph_def, MODEL_PATH, 'model.pbtxt')
+        tf.train.write_graph(sess.graph, MODEL_PATH, 'model.pbtxt')
 
         X_train, X_valid, y_train, y_valid = train_test_split(X_train_raw, y_train_raw, \
             test_size=sample_size, random_state=41)
@@ -64,6 +64,7 @@ def main():
         dataset_iter = DataIterator(X_train, y_train, batch_size)
 
         sample_images = X_valid
+        sample_labels = y_valid
         sample_z = np.random.uniform(-1.0, 1.0, size=(sample_size, model.z_dim))
 
         margin = 0.3
@@ -72,7 +73,7 @@ def main():
 
         step = 0
         for epoch in range(num_epoch):
-            for batch_images, _ in dataset_iter.iterate():
+            for batch_images, batch_labels in dataset_iter.iterate():
                 batch_z = np.random.uniform(-1.0, 1.0, [batch_size, model.z_dim])
 
                 if optimize_d:

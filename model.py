@@ -67,12 +67,9 @@ class DCGAN(object):
         h4 = linear(tf.reshape(h3, [self.batch_size, -1]), 1, 'd_h3_lin')
         return tf.nn.sigmoid(h4)
 
-    def generator(self, z, reuse=False):
-        if reuse:
-            tf.get_variable_scope().reuse_variables()
-
-        # project `z` and reshape
-        h0 = tf.reshape(linear(z, self.gf_dim * 8 * 3 * 4, 'g_h0_lin'), [-1, 3, 4, self.gf_dim * 8])
+    def generator(self, z):
+        h0 = linear(z, self.gf_dim * 8 * 3 * 4, name='g_h0_lin')
+        h0 = tf.reshape(h0, [-1, 3, 4, self.gf_dim * 8])
         h0 = tf.nn.relu(self.g_bn0(h0))
 
         h1 = deconv2d(h0, [self.batch_size, 6, 8, self.gf_dim * 4], name='g_h1')
