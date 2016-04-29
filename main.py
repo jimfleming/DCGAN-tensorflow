@@ -31,7 +31,7 @@ SAMPLES_PATH = os.path.join(SUMMARY_PATH, 'samples')
 mkdirp(SAMPLES_PATH)
 
 def main():
-    batch_size = sample_size = 64
+    batch_size = sample_size = 128
 
     with open(DATASET_PATH, 'rb') as f:
         X_train_raw, y_train_raw, _, _, _ = pickle.load(f)
@@ -107,7 +107,7 @@ def main():
                     samples = (samples + 1.) / 2.
 
                     samples_path = os.path.join(SAMPLES_PATH, 'train_{}_{}.png'.format(epoch, step))
-                    save_images(samples, [8, 8], samples_path)
+                    save_images(samples, [16, 8], samples_path)
 
                     print('[{}, {}] loss: {} (D) {} (G) (d overpowered?: {})' \
                         .format(epoch, step, d_loss, g_loss, d_overpowered))
