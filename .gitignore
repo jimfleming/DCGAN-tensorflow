@@ -2,6 +2,9 @@
 logs_*/
 .env/
 dataset/
+checkpoints/
+models/
+summaries/
 
 # Data
 data
