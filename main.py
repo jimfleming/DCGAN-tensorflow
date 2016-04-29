@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
 
+import os
 import time
 import pickle
 import numpy as np
@@ -9,14 +10,27 @@ import tensorflow as tf
 
 from sklearn.cross_validation import train_test_split
 
-from utils import save_images
+from utils import save_images, mkdirp, md5
 from model import DCGAN
 from dataset import DataIterator
+
+TESTING = os.environ.get('TESTING', False)
+
+DATASET_PATH = os.environ.get('DATASET_PATH', 'dataset/data_10_tf.pkl' if not TESTING else 'dataset/data_10_tf_subset.pkl')
+print('md5', DATASET_PATH, md5(DATASET_PATH))
+
+CHECKPOINT_PATH = os.environ.get('CHECKPOINT_PATH', 'checkpoints/')
+SUMMARY_PATH = os.environ.get('SUMMARY_PATH', 'summaries/')
+MODEL_PATH = os.environ.get('MODEL_PATH', 'models/')
+
+mkdirp(CHECKPOINT_PATH)
+mkdirp(SUMMARY_PATH)
+mkdirp(MODEL_PATH)
 
 def main():
     batch_size = 128
 
-    with open('dataset/data_10_tf.pkl', 'rb') as f:
+    with open(DATASET_PATH, 'rb') as f:
         X_train_raw, y_train_raw, _, _, _ = pickle.load(f)
 
     X_train_raw = X_train_raw.astype(np.float32)
@@ -31,11 +45,20 @@ def main():
 
     with tf.Session() as sess:
         num_epoch = 20
-        checkpoint_interval = 10
+        checkpoint_interval = 100
 
         model = DCGAN(sess, batch_size=batch_size)
-        summary_writer = tf.train.SummaryWriter('logs_{0}/'.format(int(time.time())), sess.graph_def)
+
+        saver = tf.train.Saver()
+
+        now = int(time.time())
+        summary_path = os.path.join(SUMMARY_PATH, 'summary_{}'.format(now))
+        mkdirp(summary_path)
+
+        summary_writer = tf.train.SummaryWriter(summary_path, sess.graph_def)
         sess.run(tf.initialize_all_variables())
+
+        tf.train.write_graph(sess.graph_def, MODEL_PATH, 'model.pbtxt')
 
         X_train, X_valid, y_train, y_valid = train_test_split(X_train_raw, y_train_raw, \
             test_size=model.sample_size, random_state=41)
@@ -69,6 +92,9 @@ def main():
                         model.z: sample_z
                     })
                     summary_writer.add_summary(summary, step)
+
+                    checkpoint_path = os.path.join(CHECKPOINT_PATH, 'model')
+                    saver.save(sess, checkpoint_path, global_step=step)
 
                     if epoch == 0:
                         d_overpowered = d_loss < g_loss / 2
