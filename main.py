@@ -14,7 +14,7 @@ from model import DCGAN
 from dataset import DataIterator
 
 def main():
-    batch_size = 128
+    batch_size = 64
 
     with open('dataset/data_10_tf.pkl', 'rb') as f:
         X_train_raw, y_train_raw, _, _, _ = pickle.load(f)
@@ -43,14 +43,14 @@ def main():
         dataset_iter = DataIterator(X_train, y_train, batch_size)
 
         sample_images = X_valid
-        sample_z = np.random.uniform(-1.0, 1.0, size=(model.sample_size, model.z_dim)).astype(np.float32)
+        sample_z = np.random.uniform(-1.0, 1.0, size=(model.sample_size, model.z_dim))
 
         d_overpowered = False
 
         step = 0
         for epoch in range(num_epoch):
             for batch_images, _ in dataset_iter.iterate():
-                batch_z = np.random.uniform(-1.0, 1.0, [batch_size, model.z_dim]).astype(np.float32)
+                batch_z = np.random.uniform(-1.0, 1.0, [batch_size, model.z_dim])
 
                 # update d network
                 if not d_overpowered:
@@ -81,7 +81,7 @@ def main():
                     samples += mean_train
 
                     samples_path = './samples/train_{0}_{1}.png'.format(epoch, step)
-                    save_images(samples, [16, 8], samples_path)
+                    save_images(samples, [8, 8], samples_path)
                     print('[{0}, {1}] loss: {2} (D) {3} (G) (d overpowered?: {4})'.format(epoch, step, d_loss, g_loss, d_overpowered))
 
                 step += 1
