@@ -53,10 +53,10 @@ def main():
         summary_path = os.path.join(SUMMARY_PATH, 'summary_{}'.format(now))
         mkdirp(summary_path)
 
-        summary_writer = tf.train.SummaryWriter(summary_path, sess.graph)
+        summary_writer = tf.train.SummaryWriter(summary_path, sess.graph_def)
         sess.run(tf.initialize_all_variables())
 
-        tf.train.write_graph(sess.graph, MODEL_PATH, 'model.pbtxt')
+        tf.train.write_graph(sess.graph_def, MODEL_PATH, 'model.pbtxt')
 
         X_train, X_valid, y_train, y_valid = train_test_split(X_train_raw, y_train_raw, \
             test_size=sample_size, random_state=41)
