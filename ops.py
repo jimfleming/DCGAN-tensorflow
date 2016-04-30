@@ -59,7 +59,7 @@ def conv2d(x, output_dim, k_h=3, k_w=3, d_h=2, d_w=2, name="conv2d", collections
 def deconv2d(x, output_shape, k_h=3, k_w=3, d_h=2, d_w=2, name="deconv2d", collections=None):
     with tf.variable_scope(name):
         W = tf.get_variable('W', [k_h, k_h, output_shape[-1], x.get_shape()[-1]], \
-            initializer=tf.truncated_normal_initializer(stddev=0.02), \
+            initializer=tf.random_normal_initializer(stddev=0.02), \
             collections=collections)
         b = tf.get_variable('b', [output_shape[-1]], \
             initializer=tf.constant_initializer(0.0), \
@@ -75,7 +75,7 @@ def linear(x, output_shape, name=None, collections=None):
 
     with tf.variable_scope(name):
         W = tf.get_variable("W", [shape[1], output_shape], \
-            initializer=tf.truncated_normal_initializer(stddev=0.02), \
+            initializer=tf.random_normal_initializer(stddev=0.02), \
             collections=collections)
         b = tf.get_variable("bias", [output_shape], \
             initializer=tf.constant_initializer(0.0), \
