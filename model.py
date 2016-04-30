@@ -1,3 +1,4 @@
+import numpy as np
 import tensorflow as tf
 
 from ops import BatchNorm, conv2d, deconv2d, linear, binary_cross_entropy_with_logits, lrelu
@@ -9,10 +10,12 @@ class DCGAN(object):
         self.image_shape = [48, 64, 3]
 
         self.z_dim = 100
+        self.c_dim = 10
 
         self.gf_dim = 128
         self.df_dim = 64
 
+        self.d_bn0 = BatchNorm(self.batch_size, name='d_bn0')
         self.d_bn1 = BatchNorm(self.batch_size, name='d_bn1')
         self.d_bn2 = BatchNorm(self.batch_size, name='d_bn2')
         self.d_bn3 = BatchNorm(self.batch_size, name='d_bn3')
@@ -22,12 +25,13 @@ class DCGAN(object):
         self.g_bn2 = BatchNorm(self.batch_size, name='g_bn2')
         self.g_bn3 = BatchNorm(self.batch_size, name='g_bn3')
 
-        self.x = tf.placeholder(tf.float32, [self.batch_size] + self.image_shape, name='real_images')
+        self.x = tf.placeholder(tf.float32, [self.batch_size] + self.image_shape, name='x')
+        self.c = tf.placeholder(tf.float32, [self.batch_size, self.c_dim], name='c')
         self.z = tf.placeholder(tf.float32, [self.batch_size, self.z_dim], name='z')
 
-        self.G = self.generator(self.z)
-        self.D = self.discriminator(self.x)
-        self.D_ = self.discriminator(self.G, reuse=True)
+        self.G = self.generator(self.z, self.c)
+        self.D = self.discriminator(self.x, self.c)
+        self.D_ = self.discriminator(self.G, self.c, reuse=True)
 
         self.d_loss_real = binary_cross_entropy_with_logits(tf.ones_like(self.D), self.D)
         self.d_loss_fake = binary_cross_entropy_with_logits(tf.zeros_like(self.D_), self.D_)
@@ -56,19 +60,26 @@ class DCGAN(object):
         self.d_optim = tf.train.AdamOptimizer(lr, beta1=beta1).minimize(self.d_loss, var_list=d_vars)
         self.g_optim = tf.train.AdamOptimizer(lr, beta1=beta1).minimize(self.g_loss, var_list=g_vars)
 
-    def discriminator(self, image, reuse=False):
+    def discriminator(self, x, c, reuse=False):
         if reuse:
             tf.get_variable_scope().reuse_variables()
 
-        h0 = lrelu(conv2d(image, self.df_dim, name='d_h0_conv'))
+        h0 = linear(c, self.image_shape[0] * self.image_shape[1], name='d_h0_lin')
+        h0 = tf.reshape(h0, [-1] + self.image_shape[:2] + [1])
+        h0 = tf.nn.relu(self.d_bn0(h0))
+        h0 = tf.concat(3, [x, h0], name='concat')
+
+        h0 = lrelu(conv2d(x, self.df_dim, name='d_h0_conv'))
         h1 = lrelu(self.d_bn1(conv2d(h0, self.df_dim * 2, name='d_h1_conv')))
         h2 = lrelu(self.d_bn2(conv2d(h1, self.df_dim * 4, name='d_h2_conv')))
         h3 = lrelu(self.d_bn3(conv2d(h2, self.df_dim * 8, name='d_h3_conv')))
         h4 = linear(tf.reshape(h3, [self.batch_size, -1]), 1, 'd_h3_lin')
         return tf.nn.sigmoid(h4)
 
-    def generator(self, z):
-        h0 = linear(z, self.gf_dim * 8 * 3 * 4, name='g_h0_lin')
+    def generator(self, z, c):
+	zc = tf.concat(1, [z, c])
+
+        h0 = linear(zc, self.gf_dim * 8 * 3 * 4, name='g_h0_lin')
         h0 = tf.reshape(h0, [-1, 3, 4, self.gf_dim * 8])
         h0 = tf.nn.relu(self.g_bn0(h0))
 

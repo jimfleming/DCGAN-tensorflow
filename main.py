@@ -77,10 +77,17 @@ def main():
                 batch_z = np.random.uniform(-1.0, 1.0, [batch_size, model.z_dim])
 
                 if optimize_d:
-                    sess.run(model.d_optim, feed_dict={ model.x: batch_images, model.z: batch_z })
+                    sess.run(model.d_optim, feed_dict={
+                        model.x: batch_images,
+                        model.c: batch_labels,
+                        model.z: batch_z
+                    })
 
                 if optimize_g:
-                    sess.run(model.g_optim, feed_dict={ model.z: batch_z })
+                    sess.run(model.g_optim, feed_dict={
+                        model.c: batch_labels,
+                        model.z: batch_z
+                    })
 
                 if step % checkpoint_interval == 0:
                     d_loss, g_loss, summary = sess.run([
@@ -89,6 +96,7 @@ def main():
                         model.merged
                     ], feed_dict={
                         model.x: sample_images,
+                        model.c: sample_labels,
                         model.z: sample_z
                     })
                     summary_writer.add_summary(summary, step)
@@ -108,6 +116,7 @@ def main():
 
                     samples = sess.run(model.G, feed_dict={
                         model.x: sample_images,
+                        model.c: sample_labels,
                         model.z: sample_z
                     })
 
