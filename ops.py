@@ -20,7 +20,7 @@ class BatchNorm(object):
 
         with tf.variable_scope(self.name) as scope:
             self.gamma = tf.get_variable("gamma", [shape[-1]], \
-                initializer=tf.truncated_normal_initializer(mean=1.0, stddev=0.02), collections=self.collections)
+                initializer=tf.random_normal_initializer(mean=1.0, stddev=0.02), collections=self.collections)
             self.beta = tf.get_variable("beta", [shape[-1]], \
                 initializer=tf.constant_initializer(0.0), collections=self.collections)
 
@@ -48,7 +48,7 @@ def conv2d(x, output_dim, k_h=3, k_w=3, d_h=2, d_w=2, name="conv2d", collections
             initializer=tf.truncated_normal_initializer(stddev=0.02), \
             collections=collections)
         b = tf.get_variable('b', [output_dim], \
-            initializer=tf.constant_initializer(0.1), \
+            initializer=tf.constant_initializer(0.0), \
             collections=collections)
 
         conv = tf.nn.conv2d(x, W, strides=[1, d_h, d_w, 1], padding='SAME')
@@ -62,7 +62,7 @@ def deconv2d(x, output_shape, k_h=3, k_w=3, d_h=2, d_w=2, name="deconv2d", colle
             initializer=tf.truncated_normal_initializer(stddev=0.02), \
             collections=collections)
         b = tf.get_variable('b', [output_shape[-1]], \
-            initializer=tf.constant_initializer(0.1), \
+            initializer=tf.constant_initializer(0.0), \
             collections=collections)
 
         deconv = tf.nn.conv2d_transpose(x, W, output_shape=output_shape, strides=[1, d_h, d_w, 1])
@@ -78,6 +78,6 @@ def linear(x, output_shape, name=None, collections=None):
             initializer=tf.truncated_normal_initializer(stddev=0.02), \
             collections=collections)
         b = tf.get_variable("bias", [output_shape], \
-            initializer=tf.constant_initializer(0.1), \
+            initializer=tf.constant_initializer(0.0), \
             collections=collections)
         return tf.matmul(x, W) + b
