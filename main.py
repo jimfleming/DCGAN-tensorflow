@@ -42,7 +42,7 @@ def main():
     print('train', 'mean', X_train_raw.mean(), 'std', X_train_raw.std())
 
     with tf.Session() as sess:
-        num_epoch = 1000
+        num_epoch = 200
 
         model = DCGAN(sess, batch_size=batch_size)
 
