@@ -39,10 +39,8 @@ def main():
     X_train_raw = X_train_raw.astype(np.float32)
     X_train_raw = X_train_raw / 255.
 
-    print('train', 'mean', X_train_raw.mean(), 'std', X_train_raw.std())
-
     with tf.Session() as sess:
-        num_epoch = 200
+        num_epoch = 100
 
         model = DCGAN(sess, batch_size=batch_size)
 
@@ -114,6 +112,9 @@ def main():
 
                 step += 1
 
+		print('[{}, {}] D: optimize: {}, loss: {} G: optimize: {}, loss: {}' \
+		    .format(epoch, step, optimize_d, d_loss, optimize_g, g_loss))
+
             samples = sess.run(model.G, feed_dict={
                 model.x: sample_images,
                 model.c: sample_labels,
@@ -124,9 +125,6 @@ def main():
 
             samples_path = os.path.join(SAMPLES_PATH, 'train_{}_{}.png'.format(epoch, step))
             save_images(samples, [16, 8], samples_path)
-
-            print('[{}, {}] D: optimize: {}, loss: {} G: optimize: {}, loss: {}' \
-                .format(epoch, step, optimize_d, d_loss, optimize_g, g_loss))
 
 if __name__ == '__main__':
     main()
