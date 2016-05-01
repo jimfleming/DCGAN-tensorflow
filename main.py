@@ -42,8 +42,7 @@ def main():
     print('train', 'mean', X_train_raw.mean(), 'std', X_train_raw.std())
 
     with tf.Session() as sess:
-        num_epoch = 100
-        checkpoint_interval = 100
+        num_epoch = 1000
 
         model = DCGAN(sess, batch_size=batch_size)
 
@@ -89,46 +88,45 @@ def main():
                         model.z: batch_z
                     })
 
-                if step % checkpoint_interval == 0:
-                    d_loss, g_loss, summary = sess.run([
-                        model.d_loss,
-                        model.g_loss,
-                        model.merged
-                    ], feed_dict={
-                        model.x: sample_images,
-                        model.c: sample_labels,
-                        model.z: sample_z
-                    })
-                    summary_writer.add_summary(summary, step)
+		d_loss, g_loss, summary = sess.run([
+		    model.d_loss,
+		    model.g_loss,
+		    model.merged
+		], feed_dict={
+		    model.x: sample_images,
+		    model.c: sample_labels,
+		    model.z: sample_z
+		})
+		summary_writer.add_summary(summary, step)
 
-                    checkpoint_path = os.path.join(CHECKPOINT_PATH, 'model')
-                    saver.save(sess, checkpoint_path, global_step=step)
+		checkpoint_path = os.path.join(CHECKPOINT_PATH, 'model')
+		saver.save(sess, checkpoint_path, global_step=step)
 
-                    if d_loss < margin:
-                         optimize_d = False
+		if d_loss < margin:
+		    optimize_d = False
 
-                    if g_loss < margin:
-                        optimize_g = False
+		if g_loss < margin:
+		    optimize_g = False
 
-                    if optimize_d is False and optimize_g is False:
-                        optimize_d = True
-                        optimize_g = True
+		if optimize_d is False and optimize_g is False:
+		    optimize_d = True
+		    optimize_g = True
 
-                    samples = sess.run(model.G, feed_dict={
-                        model.x: sample_images,
-                        model.c: sample_labels,
-                        model.z: sample_z
-                    })
+		step += 1
 
-                    samples = (samples + 1.) / 2.
+	    samples = sess.run(model.G, feed_dict={
+		model.x: sample_images,
+		model.c: sample_labels,
+		model.z: sample_z
+	    })
 
-                    samples_path = os.path.join(SAMPLES_PATH, 'train_{}_{}.png'.format(epoch, step))
-                    save_images(samples, [16, 8], samples_path)
+	    samples = (samples + 1.) / 2.
 
-                    print('[{}, {}] D: optimize: {}, loss: {} G: optimize: {}, loss: {}' \
-                        .format(epoch, step, optimize_d, d_loss, optimize_g, g_loss))
+	    samples_path = os.path.join(SAMPLES_PATH, 'train_{}_{}.png'.format(epoch, step))
+	    save_images(samples, [16, 8], samples_path)
 
-                step += 1
+	    print('[{}, {}] D: optimize: {}, loss: {} G: optimize: {}, loss: {}' \
+		.format(epoch, step, optimize_d, d_loss, optimize_g, g_loss))
 
 if __name__ == '__main__':
     main()
