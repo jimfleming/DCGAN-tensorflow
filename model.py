@@ -69,7 +69,7 @@ class DCGAN(object):
         h0 = tf.nn.relu(self.d_bn0(h0))
         h0 = tf.concat(3, [x, h0], name='concat')
 
-        h0 = lrelu(conv2d(x, self.df_dim, name='d_h0_conv'))
+        h0 = lrelu(conv2d(h0, self.df_dim, name='d_h0_conv'))
         h1 = lrelu(self.d_bn1(conv2d(h0, self.df_dim * 2, name='d_h1_conv')))
         h2 = lrelu(self.d_bn2(conv2d(h1, self.df_dim * 4, name='d_h2_conv')))
         h3 = lrelu(self.d_bn3(conv2d(h2, self.df_dim * 8, name='d_h3_conv')))
