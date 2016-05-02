@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 
-from ops import BatchNorm, conv2d, deconv2d, linear, binary_cross_entropy_with_logits, lrelu
+from ops import BatchNorm, conv2d, deconv2d, linear, binary_cross_entropy_with_logits
 
 class DCGAN(object):
     def __init__(self, sess, batch_size):
@@ -19,6 +19,7 @@ class DCGAN(object):
         self.d_bn1 = BatchNorm(self.batch_size, name='d_bn1')
         self.d_bn2 = BatchNorm(self.batch_size, name='d_bn2')
         self.d_bn3 = BatchNorm(self.batch_size, name='d_bn3')
+        self.d_bn4 = BatchNorm(self.batch_size, name='d_bn4')
 
         self.g_bn0 = BatchNorm(self.batch_size, name='g_bn0')
         self.g_bn1 = BatchNorm(self.batch_size, name='g_bn1')
@@ -66,33 +67,32 @@ class DCGAN(object):
 
         h0 = linear(c, self.image_shape[0] * self.image_shape[1], name='d_h0_lin')
         h0 = tf.reshape(h0, [-1] + self.image_shape[:2] + [1])
-        h0 = tf.nn.relu(self.d_bn0(h0))
+        h0 = self.d_bn0(tf.nn.elu(h0))
         h0 = tf.concat(3, [x, h0], name='concat')
 
-        h0 = lrelu(conv2d(h0, self.df_dim, name='d_h0_conv'))
-        h1 = lrelu(self.d_bn1(conv2d(h0, self.df_dim * 2, name='d_h1_conv')))
-        h2 = lrelu(self.d_bn2(conv2d(h1, self.df_dim * 4, name='d_h2_conv')))
-        h3 = lrelu(self.d_bn3(conv2d(h2, self.df_dim * 8, name='d_h3_conv')))
-        h4 = linear(tf.reshape(h3, [self.batch_size, -1]), 1, 'd_h3_lin')
-        return tf.nn.sigmoid(h4)
+        h1 = self.d_bn1(tf.nn.elu(conv2d(h0, self.df_dim, name='d_h1_conv')))
+        h2 = self.d_bn2(tf.nn.elu(conv2d(h1, self.df_dim * 2, name='d_h2_conv')))
+        h3 = self.d_bn3(tf.nn.elu(conv2d(h2, self.df_dim * 4, name='d_h3_conv')))
+        h4 = self.d_bn4(tf.nn.elu(conv2d(h3, self.df_dim * 8, name='d_h4_conv')))
+        h5 = tf.nn.sigmoid(linear(tf.reshape(h4, [self.batch_size, -1]), 1, 'd_h5_lin'))
+        return h5
 
     def generator(self, z, c):
-	zc = tf.concat(1, [z, c])
+        zc = tf.concat(1, [z, c])
 
         h0 = linear(zc, self.gf_dim * 8 * 3 * 4, name='g_h0_lin')
         h0 = tf.reshape(h0, [-1, 3, 4, self.gf_dim * 8])
-        h0 = tf.nn.relu(self.g_bn0(h0))
+        h0 = self.g_bn0(tf.nn.elu(h0))
 
         h1 = deconv2d(h0, [self.batch_size, 6, 8, self.gf_dim * 4], name='g_h1')
-        h1 = tf.nn.relu(self.g_bn1(h1))
+        h1 = self.g_bn1(tf.nn.elu(h1))
 
         h2 = deconv2d(h1, [self.batch_size, 12, 16, self.gf_dim * 2], name='g_h2')
-        h2 = tf.nn.relu(self.g_bn2(h2))
+        h2 = self.g_bn2(tf.nn.elu(h2))
 
         h3 = deconv2d(h2, [self.batch_size, 24, 32, self.gf_dim * 1], name='g_h3')
-        h3 = tf.nn.relu(self.g_bn3(h3))
+        h3 = self.g_bn3(tf.nn.elu(h3))
 
         h4 = deconv2d(h3, [self.batch_size, 48, 64, 3], name='g_h4')
         h4 = tf.nn.tanh(h4)
-
         return h4
