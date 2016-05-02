@@ -40,7 +40,7 @@ def main():
     X_train_raw = X_train_raw / 255.
 
     with tf.Session() as sess:
-        num_epoch = 100
+        num_epoch = 20
 
         model = DCGAN(sess, batch_size=batch_size)
 
@@ -97,9 +97,6 @@ def main():
                 })
                 summary_writer.add_summary(summary, step)
 
-                checkpoint_path = os.path.join(CHECKPOINT_PATH, 'model')
-                saver.save(sess, checkpoint_path, global_step=step)
-
                 if d_loss < margin:
                     optimize_d = False
 
@@ -110,10 +107,13 @@ def main():
                     optimize_d = True
                     optimize_g = True
 
-                step += 1
-
                 print('[{}, {}] D: optimize: {}, loss: {} G: optimize: {}, loss: {}' \
                     .format(epoch, step, optimize_d, d_loss, optimize_g, g_loss))
+
+                step += 1
+
+            checkpoint_path = os.path.join(CHECKPOINT_PATH, 'model')
+            saver.save(sess, checkpoint_path, global_step=step)
 
             samples = sess.run(model.G, feed_dict={
                 model.x: sample_images,
