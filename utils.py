@@ -1,8 +1,14 @@
 import os
 import hashlib
-import numpy as np
 
 import scipy.misc
+import numpy as np
+
+def one_hot(labels, num_classes=10):
+    num_samples = labels.shape[0]
+    ones = np.zeros((num_samples, num_classes))
+    ones[np.arange(num_samples), labels] = 1
+    return ones
 
 def save_images(images, size, path):
     h, w = images.shape[1], images.shape[2]
