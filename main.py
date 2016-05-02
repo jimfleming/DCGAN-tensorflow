@@ -65,8 +65,8 @@ def main():
         sample_z = np.random.uniform(-1.0, 1.0, size=(sample_size, model.z_dim))
 
         margin = 0.3
-        optimize_d = False
-        optimize_g = False
+        optimize_d = True
+        optimize_g = True
 
         step = 0
         for epoch in range(num_epoch):
@@ -112,8 +112,8 @@ def main():
 
                 step += 1
 
-		print('[{}, {}] D: optimize: {}, loss: {} G: optimize: {}, loss: {}' \
-		    .format(epoch, step, optimize_d, d_loss, optimize_g, g_loss))
+                print('[{}, {}] D: optimize: {}, loss: {} G: optimize: {}, loss: {}' \
+                    .format(epoch, step, optimize_d, d_loss, optimize_g, g_loss))
 
             samples = sess.run(model.G, feed_dict={
                 model.x: sample_images,
