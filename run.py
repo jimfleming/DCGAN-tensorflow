@@ -33,7 +33,7 @@ def main():
 
         saver.restore(sess, checkpoint_path)
 
-        sample_z = np.random.normal(size=(num_samples, model.z_dim))
+        sample_z = np.random.uniform(size=(num_samples, model.z_dim))
 
         for i in range(num_classes):
             sample_labels = one_hot(np.ones((num_samples,), dtype=np.uint8) * i)
