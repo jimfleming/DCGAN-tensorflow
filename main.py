@@ -40,11 +40,11 @@ def main():
     X_train_raw = X_train_raw / 255.
 
     with tf.Session() as sess:
-        num_epoch = 20
+        num_epoch = 100
 
         model = DCGAN(sess, batch_size=batch_size)
 
-        saver = tf.train.Saver()
+        saver = tf.train.Saver(max_to_keep=10, keep_checkpoint_every_n_hours=1)
 
         now = int(time.time())
         summary_path = os.path.join(SUMMARY_PATH, 'summary_{}'.format(now))
