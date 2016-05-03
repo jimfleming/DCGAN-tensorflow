@@ -68,10 +68,10 @@ class DCGAN(object):
         h0 = self.d_bn0(tf.nn.elu(h0))
         h0 = tf.concat(3, [x, h0], name='concat')
 
-        h1 = self.d_bn1(lrelu(conv2d(h0, self.df_dim, name='d_h1_conv')))
-        h2 = self.d_bn2(lrelu(conv2d(h1, self.df_dim * 2, name='d_h2_conv')))
-        h3 = self.d_bn3(lrelu(conv2d(h2, self.df_dim * 4, name='d_h3_conv')))
-        h4 = self.d_bn4(lrelu(conv2d(h3, self.df_dim * 8, name='d_h4_conv')))
+        h1 = lrelu(self.d_bn1(conv2d(h0, self.df_dim, name='d_h1_conv')))
+        h2 = lrelu(self.d_bn2(conv2d(h1, self.df_dim * 2, name='d_h2_conv')))
+        h3 = lrelu(self.d_bn3(conv2d(h2, self.df_dim * 4, name='d_h3_conv')))
+        h4 = lrelu(self.d_bn4(conv2d(h3, self.df_dim * 8, name='d_h4_conv')))
         h5 = tf.nn.sigmoid(linear(tf.reshape(h4, [self.batch_size, -1]), 1, 'd_h5_lin'))
         return h5
 
@@ -80,16 +80,16 @@ class DCGAN(object):
 
         h0 = linear(zc, self.gf_dim * 8 * 3 * 4, name='g_h0_lin')
         h0 = tf.reshape(h0, [-1, 3, 4, self.gf_dim * 8])
-        h0 = self.g_bn0(tf.nn.relu(h0))
+        h0 = tf.nn.relu(self.g_bn0(h0))
 
         h1 = deconv2d(h0, [self.batch_size, 6, 8, self.gf_dim * 4], name='g_h1')
-        h1 = self.g_bn1(tf.nn.relu(h1))
+        h1 = tf.nn.relu(self.g_bn1(h1))
 
         h2 = deconv2d(h1, [self.batch_size, 12, 16, self.gf_dim * 2], name='g_h2')
-        h2 = self.g_bn2(tf.nn.relu(h2))
+        h2 = tf.nn.relu(self.g_bn2(h2))
 
         h3 = deconv2d(h2, [self.batch_size, 24, 32, self.gf_dim * 1], name='g_h3')
-        h3 = self.g_bn3(tf.nn.relu(h3))
+        h3 = tf.nn.relu(self.g_bn3(h3))
 
         h4 = deconv2d(h3, [self.batch_size, 48, 64, 3], name='g_h4')
         h4 = tf.nn.tanh(h4)
