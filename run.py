@@ -22,9 +22,17 @@ mkdirp(SAMPLES_PATH)
 def main():
     width, height, num_channels = (64, 48, 3)
     num_classes = 10
-    batch_size = num_samples = 64
+    batch_size = num_samples = 100
+    z_dim = 100
 
     with tf.Session() as sess:
+        sample_z = np.random.normal(size=(z_dim, num_samples // num_classes))
+        sample_z = np.tile(sample_z, (num_classes, 1))
+        sample_z = np.reshape(sample_z, (num_samples, -1))
+
+        sample_labels = np.repeat(np.arange(num_classes), num_samples // num_classes)
+        sample_labels = one_hot(sample_labels)
+
         model = DCGAN(sess, batch_size=batch_size)
         saver = tf.train.Saver()
         sess.run(tf.initialize_all_variables())
@@ -33,21 +41,18 @@ def main():
 
         saver.restore(sess, checkpoint_path)
 
-        sample_z = np.random.uniform(size=(num_samples, model.z_dim))
+        samples = sess.run(model.G, feed_dict={
+            model.c: sample_labels,
+            model.z: sample_z
+        })
 
-        for i in range(num_classes):
-            sample_labels = one_hot(np.ones((num_samples,), dtype=np.uint8) * i)
+        samples_min = samples.min()
+        samples_max = samples.max()
+        samples = (samples - samples_min) / (samples_max - samples_min)
 
-            samples = sess.run(model.G, feed_dict={
-                model.c: sample_labels,
-                model.z: sample_z
-            })
-
-            samples = (samples + 1.) / 2.
-
-            samples_path = os.path.join(SAMPLES_PATH, 'class_{}.png'.format(i))
-            save_images(samples, [8, 8], samples_path)
-            print(samples_path)
+        samples_path = os.path.join(SAMPLES_PATH, 'classes.png')
+        save_images(samples, [num_classes, num_samples // num_classes], samples_path)
+        print(samples_path, samples.shape)
 
 if __name__ == '__main__':
     main()
