@@ -40,7 +40,7 @@ def main():
     X_train_raw = X_train_raw / 255.
 
     with tf.Session() as sess:
-        num_epoch = 100
+        num_epoch = 200
 
         model = DCGAN(sess, batch_size=batch_size)
 
