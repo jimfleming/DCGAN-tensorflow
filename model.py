@@ -15,7 +15,6 @@ class DCGAN(object):
         self.gf_dim = 128
         self.df_dim = 64
 
-        self.d_bn0 = BatchNorm(self.batch_size, name='d_bn0')
         self.d_bn1 = BatchNorm(self.batch_size, name='d_bn1')
         self.d_bn2 = BatchNorm(self.batch_size, name='d_bn2')
         self.d_bn3 = BatchNorm(self.batch_size, name='d_bn3')
@@ -67,7 +66,7 @@ class DCGAN(object):
         h0 = lrelu(h0)
         h0 = tf.concat(3, [x, h0], name='concat')
 
-        h1 = lrelu(self.d_bn0(conv2d(h0, self.df_dim, name='d_h1_conv')))
+        h1 = lrelu(conv2d(h0, self.df_dim, name='d_h1_conv'))
         h2 = lrelu(self.d_bn1(conv2d(h1, self.df_dim * 2, name='d_h2_conv')))
         h3 = lrelu(self.d_bn2(conv2d(h2, self.df_dim * 4, name='d_h3_conv')))
         h4 = lrelu(self.d_bn3(conv2d(h3, self.df_dim * 8, name='d_h4_conv')))
