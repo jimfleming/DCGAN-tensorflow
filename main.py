@@ -74,17 +74,21 @@ def main():
                 batch_z = np.random.uniform(-1.0, 1.0, [batch_size, model.z_dim])
 
                 if optimize_d:
+                    start_time_d = time.time()
                     sess.run(model.d_optim, feed_dict={
                         model.x: batch_images,
                         model.c: batch_labels,
                         model.z: batch_z
                     })
+                    end_time_d = time.time()
 
                 if optimize_g:
+                    start_time_g = time.time()
                     sess.run(model.g_optim, feed_dict={
                         model.c: batch_labels,
                         model.z: batch_z
                     })
+                    end_time_g = time.time()
 
                 d_loss, g_loss, summary = sess.run([
                     model.d_loss,
@@ -97,6 +101,12 @@ def main():
                 })
                 summary_writer.add_summary(summary, step)
 
+                time_d = end_time_d - start_time_d if optimize_d else 0
+                time_g = end_time_g - start_time_g if optimize_g else 0
+
+                print('[{}, {}] D ({}) {} [{}] G ({}) {} [{}]' \
+                    .format(epoch, step, optimize_d, d_loss, time_d, optimize_g, g_loss, time_g))
+
                 if d_loss < margin:
                     optimize_d = False
 
@@ -106,9 +116,6 @@ def main():
                 if optimize_d is False and optimize_g is False:
                     optimize_d = True
                     optimize_g = True
-
-                print('[{}, {}] D: optimize: {}, loss: {} G: optimize: {}, loss: {}' \
-                    .format(epoch, step, optimize_d, d_loss, optimize_g, g_loss))
 
                 step += 1
 
