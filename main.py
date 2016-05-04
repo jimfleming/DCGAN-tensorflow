@@ -65,8 +65,8 @@ def main():
         sample_z = np.random.uniform(-1.0, 1.0, size=(sample_size, model.z_dim))
 
         margin = 0.3
-        optimize_d = True
-        optimize_g = True
+        optimize_d = False
+        optimize_g = False
 
         step = 0
         for epoch in range(num_epoch):
