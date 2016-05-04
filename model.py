@@ -19,7 +19,6 @@ class DCGAN(object):
         self.d_bn1 = BatchNorm(self.batch_size, name='d_bn1')
         self.d_bn2 = BatchNorm(self.batch_size, name='d_bn2')
         self.d_bn3 = BatchNorm(self.batch_size, name='d_bn3')
-        self.d_bn4 = BatchNorm(self.batch_size, name='d_bn4')
 
         self.g_bn0 = BatchNorm(self.batch_size, name='g_bn0')
         self.g_bn1 = BatchNorm(self.batch_size, name='g_bn1')
@@ -65,13 +64,13 @@ class DCGAN(object):
 
         h0 = linear(c, self.image_shape[0] * self.image_shape[1], name='d_h0_lin')
         h0 = tf.reshape(h0, [-1] + self.image_shape[:2] + [1])
-        h0 = self.d_bn0(tf.nn.elu(h0))
+        h0 = lrelu(h0)
         h0 = tf.concat(3, [x, h0], name='concat')
 
-        h1 = lrelu(self.d_bn1(conv2d(h0, self.df_dim, name='d_h1_conv')))
-        h2 = lrelu(self.d_bn2(conv2d(h1, self.df_dim * 2, name='d_h2_conv')))
-        h3 = lrelu(self.d_bn3(conv2d(h2, self.df_dim * 4, name='d_h3_conv')))
-        h4 = lrelu(self.d_bn4(conv2d(h3, self.df_dim * 8, name='d_h4_conv')))
+        h1 = lrelu(self.d_bn0(conv2d(h0, self.df_dim, name='d_h1_conv')))
+        h2 = lrelu(self.d_bn1(conv2d(h1, self.df_dim * 2, name='d_h2_conv')))
+        h3 = lrelu(self.d_bn2(conv2d(h2, self.df_dim * 4, name='d_h3_conv')))
+        h4 = lrelu(self.d_bn3(conv2d(h3, self.df_dim * 8, name='d_h4_conv')))
         h5 = tf.nn.sigmoid(linear(tf.reshape(h4, [self.batch_size, -1]), 1, 'd_h5_lin'))
         return h5
 
