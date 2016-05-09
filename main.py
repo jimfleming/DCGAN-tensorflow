@@ -44,7 +44,7 @@ def main():
 
         model = DCGAN(sess, batch_size=batch_size)
 
-        saver = tf.train.Saver(max_to_keep=3, keep_checkpoint_every_n_hours=1)
+        saver = tf.train.Saver(max_to_keep=1, keep_checkpoint_every_n_hours=1)
 
         now = int(time.time())
         summary_path = os.path.join(SUMMARY_PATH, 'summary_{}'.format(now))
@@ -131,7 +131,7 @@ def main():
             samples = (samples + 1.) / 2.
 
             samples_path = os.path.join(SAMPLES_PATH, 'train_{}_{}.png'.format(epoch, step))
-            save_images(samples, [16, 8], samples_path)
+            save_images(samples, [8, 8], samples_path)
 
 if __name__ == '__main__':
     main()

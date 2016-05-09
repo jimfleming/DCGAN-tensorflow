@@ -12,7 +12,7 @@ class DCGAN(object):
         self.z_dim = 100
         self.c_dim = 10
 
-        self.gf_dim = 128
+        self.gf_dim = 256
         self.df_dim = 128
 
         self.d_bn1 = BatchNorm(self.batch_size, name='d_bn1')
