@@ -31,7 +31,7 @@ SAMPLES_PATH = os.path.join(SUMMARY_PATH, 'samples')
 mkdirp(SAMPLES_PATH)
 
 def main():
-    batch_size = sample_size = 64
+    batch_size = sample_size = 128
 
     with open(DATASET_PATH, 'rb') as f:
         X_train_raw, y_train_raw, _, _, _ = pickle.load(f)
@@ -44,7 +44,7 @@ def main():
 
         model = DCGAN(sess, batch_size=batch_size)
 
-        saver = tf.train.Saver(max_to_keep=1, keep_checkpoint_every_n_hours=1)
+        saver = tf.train.Saver(max_to_keep=1, keep_checkpoint_every_n_hours=5)
 
         now = int(time.time())
         summary_path = os.path.join(SUMMARY_PATH, 'summary_{}'.format(now))
